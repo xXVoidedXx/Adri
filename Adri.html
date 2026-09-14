@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Adri 💌</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fce4ec 0%, #f3e5f5 50%, #e8eaf6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #4a4a4a;
+            overflow-x: hidden;
+        }
+
+        #canvas-confeti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        #pantalla-sobre {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .instruccion {
+            color: #8e24aa;
+            font-weight: 700;
+            margin-bottom: 30px;
+            font-size: 1.25rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.75; transform: scale(0.97); }
+        }
+
+        .envoltorio-carta {
+            position: relative;
+            width: 320px;
+            height: 210px;
+            background-color: #ba68c8;
+            border-radius: 0 0 14px 14px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .envoltorio-carta:hover {
+            transform: translateY(-5px);
+        }
+
+        .solapa {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 160px solid transparent;
+            border-right: 160px solid transparent;
+            border-top: 115px solid #ab47bc;
+            transform-origin: top;
+            transition: transform 0.6s ease-in-out, z-index 0.6s;
+            z-index: 3;
+        }
+
+        .bolsillo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 160px solid #ce93d8;
+            border-right: 160px solid #ce93d8;
+            border-bottom: 105px solid #ba68c8;
+            border-top: 105px solid transparent;
+            border-radius: 0 0 14px 14px;
+            z-index: 2;
+        }
+
+        .carta-previa {
+            position: absolute;
+            bottom: 10px;
+            left: 15px;
+            width: 290px;
+            height: 180px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.6s ease-in-out;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #ab47bc;
+            font-size: 1.2rem;
+        }
+
+        .envoltorio-carta.abierto .solapa {
+            transform: rotateX(180deg);
+            z-index: 0;
+        }
+
+        .envoltorio-carta.abierto .carta-previa {
+            transform: translateY(-110px);
+            z-index: 4;
+        }
+
+        /* Pantalla 2: Carta Completa */
+        #pantalla-carta {
+            display: none;
+            width: 100%;
+            max-width: 680px;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+            padding: 40px 35px 35px 35px;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .barra-progreso-contenedor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background-color: #f3e5f5;
+        }
+
+        .barra-progreso-fill {
+            height: 100%;
+            width: 25%;
+            background: linear-gradient(90deg, #ab47bc, #7b1fa2);
+            transition: width 0.4s ease;
+        }
+
+        .nav-paginas {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #f5f5f5;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #9e9e9e;
+            cursor: pointer;
+            padding: 10px 4px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.activo {
+            color: #8e24aa;
+            background-color: #f3e5f5;
+        }
+
+        .pagina {
+            display: none;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        .pagina.activa {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .pagina h2 {
+            color: #8e24aa;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            text-align: center;
+        }
+
+        .pagina p {
+            margin-bottom: 18px;
+            text-align: justify;
+            color: #424242;
+        }
+
+        .highlight-box {
+            background-color: #fcf4ff;
+            border-left: 5px solid #ab47bc;
+            padding: 18px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #5a1a70;
+        }
+
+        .grid-razones {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .card-razon {
+            background-color: #faf5fb;
+            border-left: 5px solid #ab47bc;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 0.98rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card-razon:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(171, 71, 188, 0.15);
+        }
+
+        .card-razon strong {
+            color: #7b1fa2;
+            display: block;
+            margin-bottom: 6px;
+            font-size: 1.05rem;
+        }
+
+        .box-sorpresa {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-top: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .btn-accion {
+            background-color: #8e24aa;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(142, 36, 170, 0.3);
+            margin: 5px;
+        }
+
+        .btn-accion:hover {
+            transform: scale(1.04);
+            background-color: #7b1fa2;
+        }
+
+        .display-mensaje-random {
+            margin-top: 15px;
+            font-weight: 600;
+            color: #4a148c;
+            min-height: 24px;
+            font-size: 0.98rem;
+        }
+
+        .controles-paginacion {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 35px;
+            padding-top: 20px;
+            border-top: 2px solid #f5f5f5;
+        }
+
+        .btn-nav {
+            background-color: #8e24aa;
+            color: white;
+            border: none;
+            padding: 11px 22px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .btn-nav:hover:not(:disabled) {
+            background-color: #7b1fa2;
+            transform: translateY(-2px);
+        }
+
+        .btn-nav:disabled {
+            background-color: #e0e0e0;
+            color: #9e9e9e;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas-confeti"></canvas>
+
+    <div id="pantalla-sobre">
+        <div class="instruccion">✨ Haz clic en el sobre para abrir tu carta ✨</div>
+        <div class="envoltorio-carta" onclick="abrirSobre()">
+            <div class="solapa"></div>
+            <div class="bolsillo"></div>
+            <div class="carta-previa">
+                <span>Para Adri 💖</span>
+                <span style="font-size: 0.75rem; font-weight: normal; color: #777; margin-top: 5px;">(Toca para abrir)</span>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="pantalla-carta">
+        <div class="barra-progreso-contenedor">
+            <div class="barra-progreso-fill" id="barra-fill"></div>
+        </div>
+
+        <div class="nav-paginas">
+            <button class="tab-btn activo" onclick="cambiarPagina(1)">1. Para Ti 💌</button>
+            <button class="tab-btn" onclick="cambiarPagina(2)">2. Tu Fuerza ✨</button>
+            <button class="tab-btn" onclick="cambiarPagina(3)">3. Tu Valor 🌟</button>
+            <button class="tab-btn" onclick="cambiarPagina(4)">4. Incondicional 🤝</button>
+        </div>
+
+  
+        <div class="pagina activa" id="pag-1">
+            <h2>Querida Adri... 💖</h2>
+            <p>Llevaba un tiempo pensando en prepararte algo verdaderamente especial. Algo que fuera más allá de un regalo genérico o cualquier objeto material que se pueda comprar en una tienda. Quería regalarte un rincón personalizado que fuera solo tuyo, un lugar al que pudieras acudir siempre que necesites recordar lo profundamente importante que eres.</p>
+            <p>El ritmo del día a día nos arrastra a todos: la rutina de las clases, la presión de los exámenes, los momentos de incertidumbre y los problemas cotidianos. En medio de todo ese ruido, casi nunca nos paramos a expresar con calma las cosas que realmente importan.</p>
+            <div class="highlight-box">
+                "Quería darme el espacio y el tiempo de escribirte esto para decirte, sin prisas y de corazón, que tenerte como mejor amiga es uno de los mayores regalos de mi vida."
+            </div>
+            <p>He diseñado esta pequeña carta interactiva con todo el cariño del mundo para que la guardes siempre contigo, disponible en tu móvil o tu ordenador para cada vez que necesites leerla.</p>
+        </div>
+
+  
+        <div class="pagina" id="pag-2">
+            <h2>Tu fuerza cuando lo ves oscuro 🌧️➡️☀️</h2>
+            <p>Si hay algo que he aprendido al estar a tu lado, es que posees una valentía y una capacidad de recuperación que muchas veces ni tú misma eres capaz de ver.</p>
+            <p>Hay momentos en los que la vida se vuelve complicada y las cosas no salen como nos gustaría. Cuando te asalten las dudas o sientas que un día te supera, quiero que hagas una pausa y recuerdes momentos como lo de Asier. Pasaste por una situación realmente difícil, llena de momentos amargos, y aun así le plantaste cara, lo superaste y saliste adelante.</p>
+            <div class="card-razon">
+                <strong>Esa fuerza sigue dentro de ti</strong>
+                Aquella mala racha demostró de qué estás hecha. Si fuiste capaz de superar aquello y levantarte con más ganas, no hay absolutamente ningún obstáculo, examen o día feo que pueda contigo ahora. Eres una luchadora increíble.
+            </div>
+            <p style="margin-top: 15px;">Nunca permitas que una mala racha temporal te haga olvidar todo lo que ya has sido capaz de vencer.</p>
+        </div>
+
+      
+        <div class="pagina" id="pag-3">
+            <h2>Lo mucho que vales tal y como eres 🌟</h2>
+            <p>A veces somos nuestros propios jueces más duros y nos olvidamos de valorar el talento, la dedicación y el corazón que le ponemos a las cosas.</p>
+            <div class="grid-razones">
+                <div class="card-razon">
+                    <strong>1. Tu entrega y tu talento</strong>
+                    Solo hay que verte cuando estás sobre los patines. La dedicación, el esfuerzo y la pasión que le pones a cada movimiento demostrando el enorme talento que tienes. Cuando decides que vas a por algo, lo das todo, y eso es digno de admirar.
+                </div>
+                <div class="card-razon">
+                    <strong>2. Tu luz propia</strong>
+                    No necesitas la aprobación de absolutamente nadie en este mundo. No necesitas encajar en moldes ni intentar ser perfecta para agradar. Tal y como eres, con tu forma de ser, tus ganas y tu energía, vales más de lo que alcanzas a imaginar.
+                </div>
+                <div class="card-razon">
+                    <strong>3. Tu impacto en los demás</strong>
+                    Tu presencia alegra a la gente que te rodea. Aportas muchísimo más de lo que crees a quienes tenemos la suerte de compartir tiempo contigo.
+                </div>
+            </div>
+        </div>
+
+    
+        <div class="pagina" id="pag-4">
+            <h2>Aquí para todo, siempre 🤝</h2>
+            <p>Quiero que te grabes una cosa a fuego: no estás obligada a estar fuerte o sonriente los 365 días del año. Tienes todo el derecho del mundo a sentirte triste, cansada, agobiada o desanimada de vez en cuando. La vulnerabilidad también forma parte de nosotros.</p>
+            <p>Pero en esos días en los que todo parezca ir cuesta arriba, recuerda que jamás vas a tener que pasarlo sola. Da igual si es para ir a patinar y despejarte, para rajar de todo durante horas, para resolver líos o simplemente para estar sentados en silencio sin decir nada. Me tienes al lado para lo que sea.</p>
+
+            <div class="box-sorpresa">
+                <p style="text-align: center; font-weight: 700; color: #6a1b9a; margin-bottom: 12px;">Un pequeño empujón de energía ⚡</p>
+                <button class="btn-accion" onclick="generarRecordatorio()">Recordatorio rápido 🎲</button>
+                <button class="btn-accion" onclick="copiarAbrazo()">Mándame un abrazo 🫂</button>
+                <div class="display-mensaje-random" id="display-frase">Haz clic arriba cuando necesites leer algo bonito.</div>
+            </div>
+
+            <p style="text-align: center; font-weight: bold; color: #8e24aa; margin-top: 25px; font-size: 1.1rem;">
+                Gracias por ser mi mejor amiga, Adri. ❤️
+            </p>
+        </div>
+
+        <!-- CONTROLES -->
+        <div class="controles-paginacion">
+            <button class="btn-nav" id="btn-prev" onclick="moverPagina(-1)" disabled>Anterior</button>
+            <span id="num-pagina" style="align-self: center; font-weight: 700; color: #8e24aa;">Página 1 de 4</span>
+            <button class="btn-nav" id="btn-next" onclick="moverPagina(1)">Siguiente</button>
+        </div>
+    </div>
+
+    <script>
+        let paginaActual = 1;
+        const totalPaginas = 4;
+
+        const recordatorios = [
+            "¡Acuérdate de lo bien que patinas y de todo lo que eres capaz de lograr! 🛼",
+            "No te exijas tanto, Adri. Lo estás haciendo de diez. 👏",
+            "Si hoy el día está siendo feo, respira: es solo un día, no la vida entera. 🌤️",
+            "Tienes una fuerza y un talento enormes. Que no se te olvide nunca. 🔥",
+            "Haz una pausa de 5 minutos, bebe un vaso de agua y descansa. Tú puedes con todo. ☕"
+        ];
+
+        function abrirSobre() {
+            const sobre = document.querySelector('.envoltorio-carta');
+            sobre.classList.add('abierto');
+            lanzarConfeti();
+            
+            setTimeout(() => {
+                document.getElementById('pantalla-sobre').style.display = 'none';
+                document.getElementById('pantalla-carta').style.display = 'block';
+            }, 900);
+        }
+
+        function cambiarPagina(num) {
+            paginaActual = num;
+            actualizarVista();
+        }
+
+        function moverPagina(delta) {
+            paginaActual += delta;
+            if (paginaActual < 1) paginaActual = 1;
+            if (paginaActual > totalPaginas) paginaActual = totalPaginas;
+            actualizarVista();
+        }
+
+        function actualizarVista() {
+            for (let i = 1; i <= totalPaginas; i++) {
+                document.getElementById(`pag-${i}`).classList.remove('activa');
+            }
+            document.getElementById(`pag-${paginaActual}`).classList.add('activa');
+
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach((tab, index) => {
+                if (index + 1 === paginaActual) {
+                    tab.classList.add('activo');
+                } else {
+                    tab.classList.remove('activo');
+                }
+            });
+
+            const porcentaje = (paginaActual / totalPaginas) * 100;
+            document.getElementById('barra-fill').style.width = `${porcentaje}%`;
+            document.getElementById('num-pagina').innerText = `Página ${paginaActual} de ${totalPaginas}`;
+            
+            document.getElementById('btn-prev').disabled = (paginaActual === 1);
+            document.getElementById('btn-next').disabled = (paginaActual === totalPaginas);
+        }
+
+        function generarRecordatorio() {
+            const random = Math.floor(Math.random() * recordatorios.length);
+            document.getElementById('display-frase').innerText = recordatorios[random];
+        }
+
+        function copiarAbrazo() {
+            navigator.clipboard.writeText("¡Un abrazo enorme enviado desde tu carta web! 🫂❤️");
+            document.getElementById('display-frase').innerText = "¡Abrazo copiado! Mándamelo por mensaje si necesitas hablar. 💌";
+        }
+
+        function lanzarConfeti() {
+            const canvas = document.getElementById('canvas-confeti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particulas = [];
+            const colores = ['#ab47bc', '#ce93d8', '#f48fb1', '#81d4fa', '#ffd54f'];
+
+            for (let i = 0; i < 60; i++) {
+                particulas.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2 + 50,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: (Math.random() - 0.5) * 12 - 4,
+                    size: Math.random() * 7 + 4,
+                    color: colores[Math.floor(Math.random() * colores.length)],
+                    life: 100
+                });
+            }
+
+            function animar() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let activas = 0;
+
+                particulas.forEach(p => {
+                    if (p.life > 0) {
+                        activas++;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.2;
+                        p.life--;
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(p.x, p.y, p.size, p.size);
+                    }
+                });
+
+                if (activas > 0) {
+                    requestAnimationFrame(animar);
+                }
+            }
+            animar();
+        }
+    </script>
+</body>
+</html>
